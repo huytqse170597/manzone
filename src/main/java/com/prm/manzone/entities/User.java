@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 
@@ -14,15 +15,10 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
-@Table(name = "users")
+@Table
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Builder
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int id;
-
+@SuperBuilder
+public class User extends  BaseEntity {
     @NotEmpty(message = "Mật khẩu là bắt buộc")
     @JsonIgnore
     String password;
@@ -48,29 +44,7 @@ public class User {
 
     String address;
 
-    @Column(nullable = false, updatable = false)
-    Instant createdAt;
-
-    @Column(nullable = false)
-    Instant updatedAt;
-
-    @Column(nullable = false)
-    @Builder.Default
-    Boolean deleted = false;
-
     @Column(nullable = false)
     @Builder.Default
     Boolean active = false;
-
-    @PrePersist
-    protected void onCreate() {
-        Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = Instant.now();
-    }
 }
