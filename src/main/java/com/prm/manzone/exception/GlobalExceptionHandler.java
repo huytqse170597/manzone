@@ -1,6 +1,6 @@
 package com.prm.manzone.exception;
 
-import com.prm.manzone.payload.user.ApiResponse;
+import com.prm.manzone.payload.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationServiceException;

@@ -1,4 +1,4 @@
-package com.prm.manzone.payload.user;
+package com.prm.manzone.payload;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -18,4 +18,3 @@ public class ApiResponse<T> {
     private T data;
     private Object errors;
 }
-

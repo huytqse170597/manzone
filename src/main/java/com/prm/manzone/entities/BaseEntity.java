@@ -31,10 +31,6 @@ public class BaseEntity {
     @Builder.Default
     Boolean deleted = false;
 
-    @Column(nullable = false)
-    @Builder.Default
-    Boolean active = false;
-
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
