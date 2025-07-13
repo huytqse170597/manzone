@@ -37,6 +37,10 @@ public class User extends  BaseEntity {
 
     String avatarUrl;
 
+    @Column(nullable = false)
+    @Builder.Default
+    Boolean active = false;
+
     @Email
     @Column(unique = true, nullable = false, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
     @NotEmpty(message = "Email là bắt buộc")
@@ -44,7 +48,4 @@ public class User extends  BaseEntity {
 
     String address;
 
-    @Column(nullable = false)
-    @Builder.Default
-    Boolean active = false;
 }
