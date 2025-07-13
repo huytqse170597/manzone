@@ -1,6 +1,6 @@
 package com.prm.manzone.controller;
 
-import com.prm.manzone.payload.user.ApiResponse;
+import com.prm.manzone.payload.ApiResponse;
 import com.prm.manzone.payload.user.request.CreateUserRequest;
 import com.prm.manzone.enums.Role;
 import com.prm.manzone.enums.UserSortField;
@@ -32,39 +32,36 @@ public class UserController {
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<ApiResponse<Object>> getAuthenticatedUser() {
         return ResponseEntity.ok(
-            ApiResponse.builder()
-                .success(true)
-                .errors(null)
-                .message("Lấy thông tin người dùng thành công")
-                .data(userService.getAuthenticatedUser())
-                .build()
-        );
+                ApiResponse.builder()
+                        .success(true)
+                        .errors(null)
+                        .message("Lấy thông tin người dùng thành công")
+                        .data(userService.getAuthenticatedUser())
+                        .build());
     }
 
     @Operation(summary = "Get user info by UserId")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> getUserById(@PathVariable int id) {
         return ResponseEntity.ok(
-            ApiResponse.builder()
-                .success(true)
-                .errors(null)
-                .message("Lấy thông tin người dùng theo ID thành công")
-                .data(userService.getUserById(id))
-                .build()
-        );
+                ApiResponse.builder()
+                        .success(true)
+                        .errors(null)
+                        .message("Lấy thông tin người dùng theo ID thành công")
+                        .data(userService.getUserById(id))
+                        .build());
     }
 
     @Operation(summary = "Register a new user")
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> register(@RequestBody @Valid CreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            ApiResponse.builder()
-                .success(true)
-                .errors(null)
-                .message("Đăng ký tài khoản thành công")
-                .data(userService.register(request))
-                .build()
-        );
+                ApiResponse.builder()
+                        .success(true)
+                        .errors(null)
+                        .message("Đăng ký tài khoản thành công")
+                        .data(userService.register(request))
+                        .build());
     }
 
     @SecurityRequirement(name = "Bearer Authentication")
@@ -72,28 +69,26 @@ public class UserController {
     @PutMapping
     public ResponseEntity<ApiResponse<Object>> updateUser(@RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(
-            ApiResponse.builder()
-                .success(true)
-                .errors(null)
-                .message("Cập nhật thông tin người dùng thành công")
-                .data(userService.updateUser(request))
-                .build()
-        );
+                ApiResponse.builder()
+                        .success(true)
+                        .errors(null)
+                        .message("Cập nhật thông tin người dùng thành công")
+                        .data(userService.updateUser(request))
+                        .build());
     }
 
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Update authenticated user's password")
     @PutMapping("/change-password")
     public ResponseEntity<ApiResponse<Object>> changePassword(@RequestParam String oldPassword,
-                                         @RequestParam String newPassword) {
+            @RequestParam String newPassword) {
         userService.changePassword(oldPassword, newPassword);
         return ResponseEntity.ok(
-            ApiResponse.builder()
-                .success(true)
-                .errors(null)
-                .message("Mật khẩu đã được cập nhật thành công")
-                .build()
-        );
+                ApiResponse.builder()
+                        .success(true)
+                        .errors(null)
+                        .message("Mật khẩu đã được cập nhật thành công")
+                        .build());
     }
 
     @SecurityRequirement(name = "Bearer Authentication")
@@ -107,16 +102,14 @@ public class UserController {
             @RequestParam(defaultValue = "ID", name = "sortBy") UserSortField sortBy,
             @RequestParam(required = false, name = "searchString") String searchString,
             @RequestParam(defaultValue = "USER", name = "role") Role role,
-            @RequestParam(required = false, defaultValue = "false", name = "isDeleted") boolean isDeleted
-    ) {
+            @RequestParam(required = false, defaultValue = "false", name = "isDeleted") boolean isDeleted) {
         return ResponseEntity.ok(
-            ApiResponse.builder()
-                .success(true)
-                .errors(null)
-                .message("Lấy danh sách người dùng thành công")
-                .data(userService.getAllUsers(page, size, sortDir, sortBy, searchString, role, isDeleted))
-                .build()
-        );
+                ApiResponse.builder()
+                        .success(true)
+                        .errors(null)
+                        .message("Lấy danh sách người dùng thành công")
+                        .data(userService.getAllUsers(page, size, sortDir, sortBy, searchString, role, isDeleted))
+                        .build());
     }
 
 }
