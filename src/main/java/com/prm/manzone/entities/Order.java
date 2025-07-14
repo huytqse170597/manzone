@@ -14,6 +14,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
+@Table(name = "orders")
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
