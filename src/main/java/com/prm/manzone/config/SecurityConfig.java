@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/categories/**").permitAll()
+                        .requestMatchers("/conversations/**").permitAll()
                         // Protected endpoints - require authentication
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer

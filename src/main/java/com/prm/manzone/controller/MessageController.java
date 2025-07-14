@@ -12,13 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/conversations/{conversationId}/messages")
 @RequiredArgsConstructor
 public class MessageController {
 
     private final IMessageService messageService;
 
-    @GetMapping
+    @GetMapping("/api/conversations/{conversationId}/messages")
     public ResponseEntity<ApiResponse<Page<MessageResponse>>> getMessagesByConversationId(
             @PathVariable Integer conversationId,
             @RequestParam(defaultValue = "0") int page,
