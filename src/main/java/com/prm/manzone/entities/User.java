@@ -39,7 +39,7 @@ public class User extends  BaseEntity {
 
     @Column(nullable = false)
     @Builder.Default
-    Boolean active = false;
+    Boolean active = true;
 
     @Email
     @Column(unique = true, nullable = false, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
