@@ -11,5 +11,4 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CreateConversationRequest {
     private Integer userId;
-    private Integer staffId;
 }
