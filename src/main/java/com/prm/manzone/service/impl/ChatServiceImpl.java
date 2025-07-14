@@ -33,7 +33,6 @@ public class ChatServiceImpl implements IChatService {
         entity.setType(MessageType.valueOf(message.getType().name()));
         entity.setMessage(message.getMessageText());
         entity.setImageUrl(message.getImageUrl());
-        entity.setImageUrl(message.getImageUrl());
         entity.setType(message.getType());
 
         messageRepo.save(entity);

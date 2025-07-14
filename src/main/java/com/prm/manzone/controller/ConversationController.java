@@ -5,12 +5,13 @@ import com.prm.manzone.payload.chat.ConversationResponse;
 import com.prm.manzone.service.IConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,7 +23,10 @@ public class ConversationController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ConversationResponse>>> getAllConversations(
-            @PageableDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "DESC") Sort.Direction sort) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort, "createdAt"));
         Page<ConversationResponse> conversations = conversationService.getAllConversations(pageable);
         ApiResponse<Page<ConversationResponse>> response = ApiResponse.<Page<ConversationResponse>>builder()
                 .success(true)
