@@ -3,6 +3,7 @@ package com.prm.manzone.payload.product;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -13,7 +14,7 @@ import java.util.List;
 public class ProductRequest {
     String name;
     String description;
-    Double price;
+    BigDecimal price;
     List<String> imageUrls;
     int categoryId;
 }

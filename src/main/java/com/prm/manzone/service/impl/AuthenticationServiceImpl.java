@@ -42,7 +42,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         boolean isValid = true;
         try {
             SignedJWT signedJWT = verifyAuthToken(token);
-        }catch (Exception e) {
+        } catch (Exception e) {
             isValid = false;
         }
         return VerifyTokenResponse.builder()
@@ -55,12 +55,12 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         // Find user by email
         User authUser = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
-        
+
         // Check if user is active (not deleted)
         if (authUser.getDeleted()) {
             throw new RuntimeException("Tài khoản đã bị vô hiệu hóa");
         }
-        
+
         // Verify password
         if (!passwordEncoder.matches(request.getPassword(), authUser.getPassword())) {
             throw new RuntimeException("Mật khẩu không đúng");
@@ -86,7 +86,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(duration, ChronoUnit.MINUTES).toEpochMilli()))
                 .claim("email", user.getEmail())
-                .claim("scope", user.getRole())
+                .claim("scope", user.getRole().name()) // Use name() to get just CUSTOMER or ADMIN
                 .jwtID(String.valueOf(UUID.randomUUID()))
                 .build();
 
@@ -97,7 +97,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         try {
             jwsObject.sign(new MACSigner(secretKey.getBytes(StandardCharsets.UTF_8)));
             return jwsObject.serialize();
-        }catch (JOSEException e) {
+        } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
     }
@@ -107,7 +107,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         SignedJWT signedJWT = SignedJWT.parse(token);
         Date expTime = signedJWT.getJWTClaimsSet().getExpirationTime();
         var verified = signedJWT.verify(jwsVerifier);
-        if(!(verified && expTime.after(new Date()))){
+        if (!(verified && expTime.after(new Date()))) {
             throw new JOSEException("Invalid token");
         }
         return signedJWT;

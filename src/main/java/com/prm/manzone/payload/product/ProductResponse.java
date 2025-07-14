@@ -3,6 +3,7 @@ package com.prm.manzone.payload.product;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class ProductResponse {
     int id;
     String name;
     String description;
-    Double price;
+    BigDecimal price;
     List<String> imageUrls;
     Instant createdAt;
     Instant updatedAt;
