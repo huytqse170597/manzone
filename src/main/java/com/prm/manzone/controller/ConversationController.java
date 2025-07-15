@@ -5,6 +5,7 @@ import com.prm.manzone.mapper.ConversationMapper;
 import com.prm.manzone.payload.ApiResponse;
 import com.prm.manzone.payload.chat.ConversationResponse;
 import com.prm.manzone.payload.chat.CreateConversationRequest;
+import com.prm.manzone.payload.chat.UpdateConversationRequest;
 import com.prm.manzone.service.IConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,7 +15,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,5 +54,16 @@ public class ConversationController {
                 .data(conversationResponse)
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ConversationResponse>> updateConversation(@PathVariable Integer id, @RequestBody UpdateConversationRequest request) {
+        Conversation conversation = conversationService.updateConversation(id, request);
+        ConversationResponse conversationResponse = conversationMapper.toConversationResponse(conversation);
+        ApiResponse<ConversationResponse> response = ApiResponse.<ConversationResponse>builder()
+                .success(true)
+                .data(conversationResponse)
+                .build();
+        return ResponseEntity.ok(response);
     }
 }

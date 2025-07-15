@@ -1,5 +1,6 @@
 package com.prm.manzone.payload.chat;
 
+import com.prm.manzone.enums.ConversationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateConversationRequest {
+public class UpdateConversationRequest {
     private String title;
-    private Integer userId;
+    private ConversationStatus status;
 }

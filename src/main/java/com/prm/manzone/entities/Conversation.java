@@ -1,5 +1,6 @@
 package com.prm.manzone.entities;
 
+import com.prm.manzone.enums.ConversationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,7 +17,12 @@ import org.hibernate.annotations.SQLRestriction;
 @SuperBuilder
 @SQLRestriction("deleted = false")
 public class Conversation extends BaseEntity {
+    String title;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     User user;
+
+    @Enumerated(EnumType.STRING)
+    ConversationStatus status;
 }
