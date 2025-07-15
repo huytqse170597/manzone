@@ -1,0 +1,61 @@
+# Build artifacts
+
+target/
+!target/\*.jar
+
+# IDE files
+
+.idea/
+.vscode/
+_.iml
+_.iws
+
+# OS files
+
+.DS_Store
+Thumbs.db
+
+# Git
+
+.git/
+.gitignore
+
+# Docker
+
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+
+\*.md
+!README.md
+
+# Logs
+
+logs/
+\*.log
+
+# Environment files
+
+.env
+.env.local
+.env.example
+
+# GitHub Actions
+
+.github/
+
+# Maven
+
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Test reports
+
+surefire-reports/
+
+# Temporary files
+
+_.tmp
+_.temp

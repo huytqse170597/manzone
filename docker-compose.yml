@@ -1,0 +1,11 @@
+services:
+  backend:
+    image: lion3993vn/manzone-backend:latest
+    container_name: manzone-backend
+    restart: always
+    ports:
+      - "3001:3001"
+
+networks:
+  manzone:
+    driver: bridge
