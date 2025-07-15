@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/conversations")
 @RequiredArgsConstructor
@@ -63,6 +65,17 @@ public class ConversationController {
         ApiResponse<ConversationResponse> response = ApiResponse.<ConversationResponse>builder()
                 .success(true)
                 .data(conversationResponse)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<List<ConversationResponse>>> getConversationByUserId(@PathVariable Integer userId) {
+        List<Conversation> conversations = conversationService.getConversationByUserId(userId);
+        List<ConversationResponse> conversationResponses = conversations.stream().map(conversationMapper::toConversationResponse).toList();
+        ApiResponse<List<ConversationResponse>> response = ApiResponse.<List<ConversationResponse>>builder()
+                .success(true)
+                .data(conversationResponses)
                 .build();
         return ResponseEntity.ok(response);
     }

@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ConversationServiceImpl implements IConversationService {
@@ -51,5 +53,9 @@ public class ConversationServiceImpl implements IConversationService {
 
         return conversationRepository.save(conversation);
     }
-}
 
+    @Override
+    public List<Conversation> getConversationByUserId(Integer userId) {
+        return conversationRepository.findByUserId(userId);
+    }
+}
