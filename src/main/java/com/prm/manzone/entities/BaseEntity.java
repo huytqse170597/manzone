@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 
@@ -13,7 +12,6 @@ import java.time.Instant;
 @Getter
 @Setter
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-@SQLRestriction("is_deleted = false")
 @SuperBuilder
 @MappedSuperclass
 public class BaseEntity {
@@ -30,10 +28,6 @@ public class BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     Boolean deleted = false;
-
-    @Column(nullable = false)
-    @Builder.Default
-    Boolean active = false;
 
     @PrePersist
     protected void onCreate() {

@@ -24,10 +24,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
@@ -41,21 +37,42 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public User getAuthenticatedUser() {
-        SecurityContext context = SecurityContextHolder.getContext();
-        //get subject from token
-        String userId = context.getAuthentication().getName();
-        int id = Integer.parseInt(userId);
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng " + id));
+        try {
+            SecurityContext context = SecurityContextHolder.getContext();
+
+            if (context.getAuthentication() == null) {
+                throw new RuntimeException("No authentication found in security context");
+            }
+
+            if (context.getAuthentication().getName() == null) {
+                throw new RuntimeException("Authentication principal is null");
+            }
+
+            String principal = context.getAuthentication().getName();
+
+            if ("anonymousUser".equals(principal)) {
+                throw new RuntimeException("User is not authenticated - found anonymous user");
+            }
+
+            int id = Integer.parseInt(principal);
+            return userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng " + id));
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Failed to parse user ID from security context: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract user information from security context: " + e.getMessage(),
+                    e);
+        }
     }
 
     @Override
     public UserDTO register(CreateUserRequest userDto) {
         String PHONE_REGEX = "^[0-9]{10}$";
         User newUser = new User();
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()){
+        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
             throw new RuntimeException("Email đã được sử dụng");
         }
-        if(!userDto.getPhoneNumber().matches(PHONE_REGEX)){
+        if (!userDto.getPhoneNumber().matches(PHONE_REGEX)) {
             throw new RuntimeException("Số điện thoại không hợp lệ.");
         }
         newUser.setFirstName(userDto.getFirstName());
@@ -64,7 +81,7 @@ public class UserServiceImpl implements IUserService {
         newUser.setPhoneNumber(userDto.getPhoneNumber());
         newUser.setEmail(userDto.getEmail());
         newUser.setAddress(userDto.getAddress());
-        newUser.setRole(Role.USER);
+        newUser.setRole(Role.CUSTOMER);
         newUser.setAvatarUrl(defaultAvatar);
         userRepository.save(newUser);
         return userMapper.toUserDTO(newUser);
@@ -73,7 +90,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public UserDTO getUserById(int id) {
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + id));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + id));
 
         return userMapper.toUserDTO(user);
     }
@@ -103,9 +120,20 @@ public class UserServiceImpl implements IUserService {
         authenticatedUser.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(authenticatedUser);
     }
-    public Page<UserDTO> getAllUsers(int page, int size, Sort.Direction sortDir, UserSortField sortBy, String searchString, Role role, boolean isDeleted) {
+
+    public Page<UserDTO> getAllUsers(int page, int size, Sort.Direction sortDir, UserSortField sortBy,
+            String searchString, Role role, Boolean isDeleted) {
+
+        // Validate pagination parameters
+        if (page < 0) {
+            page = 0;
+        }
+        if (size <= 0 || size > 100) { // Limit max size to prevent performance issues
+            size = 10;
+        }
+
         Specification<User> spec = UserSpecification.hasSearchString(searchString)
-                .and(UserSpecification.hasRole(role.name()))
+                .and(UserSpecification.hasRole(role))
                 .and(UserSpecification.hasDeleted(isDeleted));
         Pageable pageable = PageRequest.of(page, size, sortDir, sortBy.getFieldName());
         Page<User> users = userRepository.findAll(spec, pageable);

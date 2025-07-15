@@ -15,16 +15,21 @@ import java.util.Map;
 public interface IUserService {
 
     User getAuthenticatedUser();
+
     UserDTO register(CreateUserRequest request);
+
     UserDTO getUserById(int id);
+
     UserDTO updateUser(UpdateUserRequest updateRequest);
+
     void changePassword(String oldPassword, String newPassword);
+
     Page<UserDTO> getAllUsers(int page,
-                              int size,
-                              Sort.Direction sortDir,
-                              UserSortField sortBy,
-                              String searchString,
-                              Role role,
-                              boolean isDeleted);
+            int size,
+            Sort.Direction sortDir,
+            UserSortField sortBy,
+            String searchString,
+            Role role,
+            Boolean isDeleted);
 
 }
