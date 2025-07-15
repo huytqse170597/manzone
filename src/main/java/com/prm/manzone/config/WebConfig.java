@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://manzone.wizlab.io.vn")
+                .allowedOrigins("https://manzone.wizlab.io.vn", "http://localhost:5173", "http://localhost:3001")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);
