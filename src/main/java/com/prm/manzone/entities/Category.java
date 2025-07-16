@@ -18,7 +18,7 @@ import org.hibernate.annotations.SQLRestriction;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @SQLRestriction("deleted = false")
 public class Category extends BaseEntity {
-    @Column(nullable = false, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci", unique = true)
+    @Column(nullable = false, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
     @NotEmpty(message = "Tên loại sản phẩm là bắt buộc")
     String name;
 
