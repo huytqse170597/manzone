@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket Test</title>
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    </head>
+    <body>
+        <div>
+            <h2>WebSocket Chat Test</h2>
+            <div id="messages"></div>
+            <br>
+            <input type="text" id="messageInput" placeholder="Enter message...">
+            <button onclick="sendMessage()">Send Message</button>
+            <button onclick="connect()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+        </div>
+        <script>
+        let stompClient = null;
+
+        function connect() {
+            const socket = new SockJS('http://localhost:3001/ws-chat');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                document.getElementById('messages').innerHTML += '<div>Connected!</div>';
+                
+                // Subscribe to all conversations
+                stompClient.subscribe('/topic/all-conversation/', function (message) {
+                    const msg = JSON.parse(message.body);
+                    document.getElementById('messages').innerHTML += 
+                        '<div>All Conversations: ' + JSON.stringify(msg) + '</div>';
+                });
+                
+                // Subscribe to specific conversation
+                stompClient.subscribe('/topic/conversation.1', function (message) {
+                    const msg = JSON.parse(message.body);
+                    document.getElementById('messages').innerHTML += 
+                        '<div>Conversation 1: ' + JSON.stringify(msg) + '</div>';
+                });
+            });
+        }
+
+        function sendMessage() {
+            const messageText = document.getElementById('messageInput').value;
+            if (stompClient && messageText) {
+                const message = {
+                    conversationId: 1,
+                    senderId: 1,
+                    messageText: messageText,
+                    type: "TEXT",
+                    imageUrl: null
+                };
+                
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
+                document.getElementById('messageInput').value = '';
+            }
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+                document.getElementById('messages').innerHTML += '<div>Disconnected!</div>';
+            }
+        }
+        </script>
+    </body>
+</html>

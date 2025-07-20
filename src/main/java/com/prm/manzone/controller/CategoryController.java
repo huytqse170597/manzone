@@ -5,6 +5,7 @@ import com.prm.manzone.payload.category.CategoryRequest;
 import com.prm.manzone.payload.category.CategoryResponse;
 import com.prm.manzone.service.ICategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +26,8 @@ public class CategoryController {
 
     @Operation(summary = "Create a new category")
     @PostMapping
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(@RequestBody @Valid CategoryRequest request) {
         CategoryResponse response = categoryService.createCategory(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -36,6 +40,8 @@ public class CategoryController {
 
     @Operation(summary = "Update an existing category")
     @PutMapping("/{id}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(@PathVariable int id,
             @RequestBody @Valid CategoryRequest request) {
         CategoryResponse response = categoryService.updateCategory(id, request);
@@ -49,6 +55,8 @@ public class CategoryController {
 
     @Operation(summary = "Delete a category")
     @DeleteMapping("/{id}")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable int id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.ok(

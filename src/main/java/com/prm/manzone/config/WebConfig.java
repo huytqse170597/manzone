@@ -22,7 +22,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:3001",
                         "http://localhost:3000",
                         "https://manzone-admin.vercel.app",
-                        "https://*.vercel.app")
+                        "https://*.vercel.app",
+                        "http://127.0.0.1:5500/")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
@@ -39,7 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
                 "http://localhost:5173",
                 "http://localhost:3001",
                 "http://localhost:3000",
-                "https://manzone-admin.vercel.app"));
+                "https://manzone-admin.vercel.app","http://127.0.0.1:5500/"));
 
         // Allowed methods
         configuration.setAllowedMethods(Arrays.asList(

@@ -7,6 +7,7 @@ import com.prm.manzone.payload.chat.ConversationResponse;
 import com.prm.manzone.payload.chat.CreateConversationRequest;
 import com.prm.manzone.payload.chat.UpdateConversationRequest;
 import com.prm.manzone.service.IConversationService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/conversations")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class ConversationController {
 
     private final IConversationService conversationService;
@@ -76,6 +78,16 @@ public class ConversationController {
         ApiResponse<List<ConversationResponse>> response = ApiResponse.<List<ConversationResponse>>builder()
                 .success(true)
                 .data(conversationResponses)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/markdone/{conversationId}")
+    public ResponseEntity<ApiResponse<Void>> markConversationAsDone(@PathVariable Integer conversationId) {
+        conversationService.markConversationAsDone(conversationId);
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .success(true)
+                .message("Conversation marked as done successfully")
                 .build();
         return ResponseEntity.ok(response);
     }
