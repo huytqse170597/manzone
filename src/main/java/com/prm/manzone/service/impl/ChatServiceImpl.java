@@ -19,7 +19,6 @@ public class ChatServiceImpl implements IChatService {
     private final ConversationRepository conversationRepo;
     private final UserRepository userRepo;
     private final MessageRepository messageRepo;
-    private final SimpMessagingTemplate simpMessagingTemplate;
     @Override
     public ChatMessage handleIncomingMessage(ChatMessage message) {
         Conversation conversation = conversationRepo.findById(message.getConversationId())
@@ -37,8 +36,6 @@ public class ChatServiceImpl implements IChatService {
         entity.setType(message.getType());
 
         messageRepo.save(entity);
-        // send ws to admin
-        simpMessagingTemplate.convertAndSend("/topic/all-conversation/", entity);
         return message;
     }
 }

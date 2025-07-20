@@ -12,6 +12,7 @@ import com.prm.manzone.service.IConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class ConversationServiceImpl implements IConversationService {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final ConversationMapper conversationMapper;
-
+    private final SimpMessagingTemplate simpMessagingTemplate;
     @Override
     public Conversation createConversation(CreateConversationRequest request) {
         User user = userRepository.findById(request.getUserId())
@@ -32,6 +33,7 @@ public class ConversationServiceImpl implements IConversationService {
                 .title(null != request.getTitle() ? request.getTitle() : "New Conversation")
                 .done(false)
                 .build();
+        simpMessagingTemplate.convertAndSend("/topic/new-conversation", conversation);
         return conversationRepository.save(conversation);
     }
 
