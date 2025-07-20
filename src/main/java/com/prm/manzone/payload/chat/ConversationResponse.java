@@ -16,6 +16,7 @@ public class ConversationResponse {
     private Integer userId;
     private String email;
     private String title;
+    private boolean done;
     private Instant createdAt;
     private Instant updatedAt;
 }
