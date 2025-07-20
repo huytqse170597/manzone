@@ -34,6 +34,8 @@ public class SecurityConfig {
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/categories/**").permitAll()
                         .requestMatchers("/conversations/**").permitAll()
+                        // WebSocket endpoints
+                        .requestMatchers("/ws-chat/**").permitAll()
                         // Protected endpoints - require authentication
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer

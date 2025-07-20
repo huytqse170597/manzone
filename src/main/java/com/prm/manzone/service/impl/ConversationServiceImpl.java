@@ -30,6 +30,7 @@ public class ConversationServiceImpl implements IConversationService {
         Conversation conversation = Conversation.builder()
                 .user(user)
                 .title(null != request.getTitle() ? request.getTitle() : "New Conversation")
+                .done(false)
                 .build();
         return conversationRepository.save(conversation);
     }
@@ -57,5 +58,13 @@ public class ConversationServiceImpl implements IConversationService {
     @Override
     public List<Conversation> getConversationByUserId(Integer userId) {
         return conversationRepository.findByUserId(userId);
+    }
+
+    @Override
+    public void markConversationAsDone(Integer conversationId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        conversation.setDone(true);
+        conversationRepository.save(conversation);
     }
 }

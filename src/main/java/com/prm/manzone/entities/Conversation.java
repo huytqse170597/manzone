@@ -25,4 +25,7 @@ public class Conversation extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     ConversationStatus status;
+
+    @Builder.Default
+    boolean done = false;
 }

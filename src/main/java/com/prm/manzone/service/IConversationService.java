@@ -14,4 +14,6 @@ public interface IConversationService {
     Page<ConversationResponse> getAllConversations(Pageable pageable);
     Conversation updateConversation(Integer id, UpdateConversationRequest request);
     List<Conversation> getConversationByUserId(Integer userId);
+
+    void markConversationAsDone(Integer conversationId);
 }
