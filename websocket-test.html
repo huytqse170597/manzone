@@ -1,69 +1,572 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebSocket Test</title>
+        <title>ManZone Chat - Real World Test</title>
         <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+            .container { display: flex; gap: 20px; }
+            .auth-panel, .chat-panel { flex: 1; }
+            .login-form, .conversation-list, .chat-area { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+            .messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background-color: #f9f9f9; }
+            .message { margin-bottom: 10px; padding: 8px; border-radius: 5px; }
+            .message.sent { background-color: #007bff; color: white; text-align: right; }
+            .message.received { background-color: #e9ecef; }
+            .message-info { font-size: 0.8em; opacity: 0.7; }
+            .conversation-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+            .conversation-item:hover { background-color: #f5f5f5; }
+            .conversation-item.active { background-color: #007bff; color: white; }
+            .input-group { display: flex; gap: 10px; }
+            .input-group input { flex: 1; padding: 8px; }
+            .btn { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+            .btn:hover { background-color: #0056b3; }
+            .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+            .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+            .status.success { background-color: #d4edda; color: #155724; }
+            .status.error { background-color: #f8d7da; color: #721c24; }
+            .status.info { background-color: #d1ecf1; color: #0c5460; }
+            .hidden { display: none; }
+        </style>
     </head>
     <body>
-        <div>
-            <h2>WebSocket Chat Test</h2>
-            <div id="messages"></div>
-            <br>
-            <input type="text" id="messageInput" placeholder="Enter message...">
-            <button onclick="sendMessage()">Send Message</button>
-            <button onclick="connect()">Connect</button>
-            <button onclick="disconnect()">Disconnect</button>
+        <h1>ManZone Customer Chat - Real World Simulation</h1>
+        <!-- Server Configuration -->
+        <div class="login-form">
+            <h3>Server Configuration</h3>
+            <div class="input-group">
+                <label>Server URL:</label>
+                <input
+                    type="text"
+                    id="serverUrl"
+                    value="https://manzone.wizlab.io.vn"
+                    placeholder="https://manzone.wizlab.io.vn"
+                >
+            </div>
         </div>
+        <div class="container">
+            <!-- Authentication Panel -->
+            <div class="auth-panel">
+                <div class="login-form" id="loginPanel">
+                    <h3>Login</h3>
+                    <div class="input-group">
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="Email"
+                            value="admin@gmail.com"
+                        >
+                    </div>
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Password"
+                            value="admin123"
+                        >
+                    </div>
+                    <button class="btn" onclick="login()">Login</button>
+                </div>
+                <div class="login-form hidden" id="userInfo">
+                    <h3>User Information</h3>
+                    <div id="userDetails"></div>
+                    <button class="btn" onclick="logout()">Logout</button>
+                </div>
+                <div class="conversation-list">
+                    <h3>Conversations</h3>
+                    <button
+                        class="btn"
+                        onclick="createNewConversation()"
+                        id="newConversationBtn"
+                        disabled
+                    >New Conversation</button>
+                    <div id="conversationsList"></div>
+                </div>
+            </div>
+            <!-- Chat Panel -->
+            <div class="chat-panel">
+                <div class="chat-area" id="chatArea">
+                    <h3>Chat</h3>
+                    <div id="currentConversationInfo"></div>
+                    <div class="messages" id="messages"></div>
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            id="messageInput"
+                            placeholder="Type your message..."
+                            disabled
+                        >
+                        <button
+                            class="btn"
+                            onclick="sendMessage()"
+                            id="sendBtn"
+                            disabled
+                        >Send</button>
+                        <button
+                            class="btn"
+                            onclick="loadMoreMessages()"
+                            id="loadMoreBtn"
+                            disabled
+                        >Load More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Status Messages -->
+        <div id="statusMessages"></div>
         <script>
-        let stompClient = null;
+        // Configuration
+        const CONFIG = {
+            get serverUrl() { return document.getElementById('serverUrl').value.trim(); },
+            get wsUrl() { return this.serverUrl.replace('http', 'http') + '/ws-chat'; }
+        };
 
-        function connect() {
-            const socket = new SockJS('http://localhost:3001/ws-chat');
-            stompClient = Stomp.over(socket);
+        // State
+        let stompClient = null;
+        let currentUser = null;
+        let jwtToken = null;
+        let conversations = [];
+        let currentConversation = null;
+        let currentMessages = [];
+        let currentPage = 0;
+        const pageSize = 20;
+
+        // Utility Functions
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('statusMessages');
+            const statusElement = document.createElement('div');
+            statusElement.className = `status ${type}`;
+            statusElement.textContent = message;
+            statusDiv.appendChild(statusElement);
             
-            stompClient.connect({}, function (frame) {
-                console.log('Connected: ' + frame);
-                document.getElementById('messages').innerHTML += '<div>Connected!</div>';
-                
-                // Subscribe to all conversations
-                stompClient.subscribe('/topic/all-conversation/', function (message) {
-                    const msg = JSON.parse(message.body);
-                    document.getElementById('messages').innerHTML += 
-                        '<div>All Conversations: ' + JSON.stringify(msg) + '</div>';
+            setTimeout(() => {
+                statusElement.remove();
+            }, 5000);
+        }
+
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        function scrollToBottom() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // JWT Utility Functions
+        function parseJwt(token) {
+            try {
+                // Split the token into header, payload, and signature
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('Error parsing JWT:', error);
+                return null;
+            }
+        }
+
+        function extractUserFromToken(token) {
+            const payload = parseJwt(token);
+            if (!payload) return null;
+
+            return {
+                id: parseInt(payload.sub), // subject contains user ID
+                email: payload.email,
+                role: payload.scope, // scope contains role (ADMIN/CUSTOMER)
+                firstName: payload.email.split('@')[0], // Extract name from email as fallback
+                lastName: '', // Not available in token
+                exp: payload.exp, // Expiration time
+                iat: payload.iat, // Issued at time
+                iss: payload.iss, // Issuer
+                jti: payload.jti  // JWT ID
+            };
+        }
+
+        // Authentication Functions
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showStatus('Please enter email and password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.serverUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
                 });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    jwtToken = data.data.token;
+                    
+                    // Extract user information from JWT token
+                    currentUser = extractUserFromToken(jwtToken);
+                    
+                    if (!currentUser) {
+                        showStatus('Failed to parse user information from token', 'error');
+                        return;
+                    }
+                    
+                    showStatus(`Login successful! Welcome ${currentUser.email}`, 'success');
+                    console.log('Logged in user:', currentUser);
+                    
+                    updateUI();
+                    await loadConversations();
+                    connectWebSocket();
+                } else {
+                    showStatus(data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showStatus('Login error: ' + error.message, 'error');
+                console.error('Login error:', error);
+            }
+        }
+
+        function logout() {
+            disconnectWebSocket();
+            jwtToken = null;
+            currentUser = null;
+            conversations = [];
+            currentConversation = null;
+            currentMessages = [];
+            updateUI();
+            showStatus('Logged out successfully', 'info');
+        }
+
+        function updateUI() {
+            const loginPanel = document.getElementById('loginPanel');
+            const userInfo = document.getElementById('userInfo');
+            const userDetails = document.getElementById('userDetails');
+            const newConversationBtn = document.getElementById('newConversationBtn');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+
+            if (currentUser) {
+                loginPanel.classList.add('hidden');
+                userInfo.classList.remove('hidden');
                 
-                // Subscribe to specific conversation
-                stompClient.subscribe('/topic/conversation.1', function (message) {
-                    const msg = JSON.parse(message.body);
-                    document.getElementById('messages').innerHTML += 
-                        '<div>Conversation 1: ' + JSON.stringify(msg) + '</div>';
+                // Display parsed JWT information
+                const tokenExpiry = new Date(currentUser.exp * 1000); // Convert from seconds to milliseconds
+                const tokenIssued = new Date(currentUser.iat * 1000);
+                
+                userDetails.innerHTML = `
+                    <p><strong>ID:</strong> ${currentUser.id}</p>
+                    <p><strong>Email:</strong> ${currentUser.email}</p>
+                    <p><strong>Role:</strong> ${currentUser.role}</p>
+                    <p><strong>Token Issued:</strong> ${formatTimestamp(tokenIssued)}</p>
+                    <p><strong>Token Expires:</strong> ${formatTimestamp(tokenExpiry)}</p>
+                    <p><strong>JWT ID:</strong> ${currentUser.jti}</p>
+                `;
+                newConversationBtn.disabled = false;
+                messageInput.disabled = !currentConversation;
+                sendBtn.disabled = !currentConversation;
+            } else {
+                loginPanel.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+                newConversationBtn.disabled = true;
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+            }
+        }
+
+        // Conversation Functions
+        async function loadConversations() {
+            if (!currentUser || !jwtToken) return;
+
+            try {
+                const response = await fetch(`${CONFIG.serverUrl}/api/conversations`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
                 });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // For admin users, API returns paginated data with conversations in data.content
+                    // For regular users, it would be data.data directly
+                    conversations = data.data.content || data.data;
+                    displayConversations();
+                    showStatus(`Conversations loaded successfully (${conversations.length} total)`, 'success');
+                    console.log('Loaded conversations:', conversations);
+                } else {
+                    showStatus('Failed to load conversations: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error loading conversations: ' + error.message, 'error');
+                console.error('Load conversations error:', error);
+            }
+        }
+
+        function displayConversations() {
+            const listDiv = document.getElementById('conversationsList');
+            listDiv.innerHTML = '';
+
+            conversations.forEach(conversation => {
+                const item = document.createElement('div');
+                item.className = 'conversation-item';
+                if (currentConversation && currentConversation.id === conversation.id) {
+                    item.classList.add('active');
+                }
+                
+                // Show more details since admin can see all conversations
+                item.innerHTML = `
+                    <div><strong>${conversation.title}</strong></div>
+                    <div class="message-info">User: ${conversation.email} (ID: ${conversation.userId})</div>
+                    <div class="message-info">Created: ${formatTimestamp(conversation.createdAt)}</div>
+                    <div class="message-info">Status: ${conversation.done ? 'Done' : 'Active'}</div>
+                `;
+                
+                item.onclick = () => selectConversation(conversation);
+                listDiv.appendChild(item);
+            });
+        }
+
+        async function createNewConversation() {
+            if (!currentUser || !jwtToken) return;
+
+            const title = prompt('Enter conversation title:', 'New Support Request');
+            if (!title) return;
+
+            try {
+                const response = await fetch(`${CONFIG.serverUrl}/api/conversations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        userId: currentUser.id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('Conversation created successfully', 'success');
+                    await loadConversations();
+                    selectConversation(data.data);
+                } else {
+                    showStatus('Failed to create conversation: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error creating conversation: ' + error.message, 'error');
+                console.error('Create conversation error:', error);
+            }
+        }
+
+        async function selectConversation(conversation) {
+            currentConversation = conversation;
+            currentPage = 0;
+            currentMessages = [];
+            
+            // Update UI
+            document.getElementById('currentConversationInfo').innerHTML = `
+                <strong>Conversation:</strong> ${conversation.title} 
+                <span class="message-info">(ID: ${conversation.id})</span>
+            `;
+            
+            displayConversations(); // Refresh to show active conversation
+            updateUI();
+            
+            // Subscribe to WebSocket topic for this conversation
+            if (stompClient && stompClient.connected) {
+                subscribeToConversation(conversation.id);
+            }
+            
+            // Load messages
+            await loadMessages();
+        }
+
+        // Message Functions
+        async function loadMessages(page = 0) {
+            if (!currentConversation || !jwtToken) return;
+
+            try {
+                const response = await fetch(
+                    `${CONFIG.serverUrl}/api/conversations/${currentConversation.id}/messages?page=${page}&size=${pageSize}&sort=DESC`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${jwtToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const messages = data.data.content.reverse(); // Reverse to show chronological order
+                    
+                    if (page === 0) {
+                        currentMessages = messages;
+                    } else {
+                        currentMessages = [...messages, ...currentMessages];
+                    }
+                    
+                    displayMessages();
+                    
+                    const loadMoreBtn = document.getElementById('loadMoreBtn');
+                    loadMoreBtn.disabled = data.data.last;
+                    
+                    if (page === 0) {
+                        scrollToBottom();
+                    }
+                    
+                    showStatus(`Loaded ${messages.length} messages`, 'success');
+                } else {
+                    showStatus('Failed to load messages: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error loading messages: ' + error.message, 'error');
+                console.error('Load messages error:', error);
+            }
+        }
+
+        function loadMoreMessages() {
+            currentPage++;
+            loadMessages(currentPage);
+        }
+
+        function displayMessages() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+
+            currentMessages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                const isOwnMessage = message.senderId === currentUser.id;
+                
+                messageDiv.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
+                messageDiv.innerHTML = `
+                    <div>${message.message}</div>
+                    <div class="message-info">
+                        ${message.senderEmail} - ${formatTimestamp(message.createdAt)}
+                        ${message.type === 'IMAGE' && message.imageUrl ? `<br><img src="${message.imageUrl}" style="max-width: 200px;">` : ''}
+                    </div>
+                `;
+                
+                messagesDiv.appendChild(messageDiv);
             });
         }
 
         function sendMessage() {
-            const messageText = document.getElementById('messageInput').value;
-            if (stompClient && messageText) {
-                const message = {
-                    conversationId: 1,
-                    senderId: 1,
-                    messageText: messageText,
-                    type: "TEXT",
-                    imageUrl: null
-                };
+            const messageText = document.getElementById('messageInput').value.trim();
+            if (!messageText || !currentConversation || !stompClient) return;
+
+            const message = {
+                conversationId: currentConversation.id,
+                senderId: currentUser.id,
+                messageText: messageText,
+                type: "TEXT",
+                imageUrl: null
+            };
+
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
+            document.getElementById('messageInput').value = '';
+        }
+
+        function addMessageToChat(chatMessage) {
+            // Create message object similar to API response
+            const message = {
+                id: Date.now(), // Temporary ID
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                senderId: chatMessage.senderId,
+                senderEmail: chatMessage.senderId === currentUser.id ? currentUser.email : `User-${chatMessage.senderId}`,
+                type: chatMessage.type,
+                message: chatMessage.messageText,
+                imageUrl: chatMessage.imageUrl
+            };
+
+            currentMessages.push(message);
+            displayMessages();
+            scrollToBottom();
+        }
+
+        // WebSocket Functions
+        function connectWebSocket() {
+            if (!CONFIG.serverUrl) return;
+
+            try {
+                const socket = new SockJS(CONFIG.wsUrl);
+                stompClient = Stomp.over(socket);
                 
-                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
-                document.getElementById('messageInput').value = '';
+                stompClient.connect({}, function (frame) {
+                    console.log('WebSocket Connected: ' + frame);
+                    showStatus('WebSocket connected successfully', 'success');
+                    
+                    // Subscribe to new conversation notifications
+                    stompClient.subscribe('/topic/new-conversation', function (message) {
+                        console.log('New conversation notification:', message.body);
+                        loadConversations(); // Refresh conversation list
+                    });
+                    
+                    // Subscribe to current conversation if selected
+                    if (currentConversation) {
+                        subscribeToConversation(currentConversation.id);
+                    }
+                    
+                }, function(error) {
+                    console.error('WebSocket connection error:', error);
+                    showStatus('WebSocket connection failed: ' + error, 'error');
+                });
+                
+            } catch (error) {
+                showStatus('WebSocket setup error: ' + error.message, 'error');
+                console.error('WebSocket setup error:', error);
             }
         }
 
-        function disconnect() {
+        function subscribeToConversation(conversationId) {
+            if (!stompClient || !stompClient.connected) return;
+
+            // Subscribe to conversation-specific messages
+            stompClient.subscribe(`/topic/conversation.${conversationId}`, function (message) {
+                console.log('Received message:', message.body);
+                const chatMessage = JSON.parse(message.body);
+                addMessageToChat(chatMessage);
+            });
+        }
+
+        function disconnectWebSocket() {
             if (stompClient !== null) {
                 stompClient.disconnect();
-                document.getElementById('messages').innerHTML += '<div>Disconnected!</div>';
+                stompClient = null;
+                showStatus('WebSocket disconnected', 'info');
             }
         }
+
+        // Event Listeners
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initialize
+        updateUI();
+
+        // Test JWT parsing with sample token (for development/testing)
+        function testJwtParsing() {
+            const sampleToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMiIsInNjb3BlIjoiQURNSU4iLCJpc3MiOiJtYW56b25lIiwiZXhwIjoxNzUzNzExMDUzLCJpYXQiOjE3NTMxMTEwNTMsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwianRpIjoiOWVkNjQ0N2EtZjhiMi00NTNiLWJmZTktMjgyMmMzYTcyMzE0In0.hWehd6w3jIOOhwE1lwiuZrU5E70k5EpMhfCssP1kgxB-eiN_qG1Yc-tkYPX5uR38SvA2OtV8Anv_ArXrpZeUzw";
+            const parsedUser = extractUserFromToken(sampleToken);
+            console.log('Sample JWT parsing test:', parsedUser);
+        }
+
+        // Call test function in development
+        // testJwtParsing();
         </script>
     </body>
 </html>
