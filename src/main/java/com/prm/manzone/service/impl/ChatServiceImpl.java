@@ -36,6 +36,7 @@ public class ChatServiceImpl implements IChatService {
         entity.setType(message.getType());
 
         messageRepo.save(entity);
+        message.setSenderEmail(sender.getEmail());
         return message;
     }
 }

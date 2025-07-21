@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class ChatMessage {
     private int conversationId;
     private int senderId;
+    private String senderEmail;
     private String messageText;
     private String imageUrl;
     private MessageType type;
