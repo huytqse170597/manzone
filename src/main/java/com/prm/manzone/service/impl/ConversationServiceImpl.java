@@ -67,7 +67,7 @@ public class ConversationServiceImpl implements IConversationService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
         conversation.setDone(true);
-        simpMessagingTemplate.convertAndSend("/topic/conversation-done", conversation);
+        simpMessagingTemplate.convertAndSend("/topic/conversation-done", conversationMapper.toConversationResponse(conversation));
         conversationRepository.save(conversation);
     }
 }
